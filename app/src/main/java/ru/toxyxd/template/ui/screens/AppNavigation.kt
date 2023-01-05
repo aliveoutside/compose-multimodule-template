@@ -77,6 +77,7 @@ fun AppNavigation(
             bottomBar = {
                 val currentRootRoute = navController.currentBackStack.collectAsState().value
                     .getOrNull(1)?.destination?.route
+                val currentRoute = navBackStackEntry?.destination?.route
 
                 NavigationBar(
                     modifier = Modifier
@@ -115,6 +116,35 @@ fun AppNavigation(
                                 }
                             }
                         )
+                    }
+
+                    viewModel.providesBottomNavigation.forEach {
+                        if (it is NestedFeatureEntry && currentRootRoute == it.graphRoute) {
+                            it.bottomNavigationEntries.forEach { entry ->
+                                val selected = currentRoute == entry.route
+                                NavigationBarItem(
+                                    icon = {
+                                        Icon(
+                                            entry.icon(),
+                                            contentDescription = stringResource(entry.name)
+                                        )
+                                    },
+                                    label = { Text(stringResource(entry.name)) },
+                                    selected = selected,
+                                    onClick = {
+                                        if (selected) return@NavigationBarItem
+                                        navController.navigate(entry.route) {
+                                            popUpTo(it.graphRoute) {
+                                                saveState = true
+                                            }
+
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -185,6 +215,9 @@ class AppNavigationViewModel @Inject constructor(
         .map { it.fullscreenRoutes }
         .flatten()
         .distinct()
+
+    val providesBottomNavigation = destinations.values
+        .filterIsInstance<ProvidesBottomNavigation>()
 
     val bottomNavDestinations = listOf(
         destinations.find<HomeFeature>()

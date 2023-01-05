@@ -65,6 +65,11 @@ interface HasFullscreenRoutes {
         get() = emptyList()
 }
 
+interface ProvidesBottomNavigation {
+    val bottomNavigationEntries: List<NavigationEntry>
+        get() = emptyList()
+}
+
 inline fun <reified T : FeatureEntry> Destinations.find(): T = findOrNull() ?: error("Destination '${T::class.java}' is not defined.")
 inline fun <reified T : FeatureEntry> Destinations.findOrNull(): T? = this[T::class.java] as? T
 
